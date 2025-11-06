@@ -1,0 +1,19 @@
+# Core LLM/RAG Framework
+langchain
+langchain-community
+langchain_text_splitters
+langchain-core
+
+# Vector Database
+chromadb
+
+# PDF Loading
+pypdf
+
+# To talk to Ollama
+langchain-ollama
+
+# API Framework
+fastapi
+uvicorn[standard]
+python-multipart 
