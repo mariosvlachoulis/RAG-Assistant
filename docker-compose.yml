@@ -1,0 +1,39 @@
+# This is our Docker Compose file. It defines and runs our
+# multi-container application. We have two services:
+# 1. `rag-api`: Our FastAPI app (built from our Dockerfile).
+# 2. `ollama`: The official Ollama server (from a public image).
+# ----------------
+
+version: '3.9'
+
+services:
+  # --- Our FastAPI RAG API Service ---
+  rag-api:
+    build: .  # Build the image from the Dockerfile in this directory
+    container_name: rag-api-service
+    ports:
+      - "8000:8000"  # Map host port 8000 to container port 8000
+    volumes:
+      # This is CRUCIAL. We mount the vector store directory
+      # from our host machine *into* the container.
+      # This way, our vector data PERSISTS even if we
+      # restart or rebuild the container.
+      - ./chroma_db_api:/app/chroma_db_api
+    environment:
+      # This is how our API knows where to find the Ollama service.
+      # 'ollama' is the name of the *other* service defined below.
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - ollama  # Don't start this API until the ollama service is up.
+
+  # --- The Ollama LLM Service ---
+  ollama:
+    image: ollama/ollama  # Use the official Ollama image
+    container_name: ollama-service
+    ports:
+      - "11434:11434" # Expose the Ollama API port
+    volumes:
+      # This mounts a local directory into the container where
+      # Ollama stores its models. This way, we only have to
+      # pull the models *once*, and they will be persistent.
+      - ./ollama_models:/root/.ollama

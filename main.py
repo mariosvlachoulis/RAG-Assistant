@@ -27,6 +27,7 @@ from langchain_core.retrievers import BaseRetriever
 CHROMA_PERSIST_DIR = "./chroma_db_api"
 EMBEDDING_MODEL = "nomic-embed-text"
 LLM_MODEL = "mistral"
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -107,7 +108,10 @@ def ingest_pdf(pdf_path: str) -> bool:
         chunks = text_splitter.split_documents(docs)
         print(f"Split PDF into {len(chunks)} chunks.")
 
-        embedding_model = OllamaEmbeddings(model=EMBEDDING_MODEL)
+        embedding_model = OllamaEmbeddings(
+            model=EMBEDDING_MODEL,
+            base_url=OLLAMA_BASE_URL
+            )
 
         # Create the vector store with persistence
         vector_store = Chroma.from_documents(
@@ -130,7 +134,10 @@ def get_persistent_retriever() -> BaseRetriever:
     if not os.path.exists(CHROMA_PERSIST_DIR):
         raise HTTPException(status_code=404, detail="Vector store not found. Please upload a PDF first.")
         
-    embedding_model = OllamaEmbeddings(model=EMBEDDING_MODEL)
+    embedding_model = OllamaEmbeddings(
+        model=EMBEDDING_MODEL,
+        base_url=OLLAMA_BASE_URL
+        )
     
     vector_store = Chroma(
         collection_name="rag-collection-api",
@@ -145,7 +152,10 @@ def get_rag_chain(retriever: BaseRetriever, mode: str):
     """
     Creates the RAG chain using the provided retriever and mode.
     """
-    llm = Ollama(model=LLM_MODEL)
+    llm = Ollama(
+        model=LLM_MODEL,
+        base_url=OLLAMA_BASE_URL
+        )
     
     prompt = PROMPT_TEMPLATES.get(mode)
     if not prompt:
